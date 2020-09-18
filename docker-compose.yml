@@ -17,8 +17,8 @@ web:
     - PORT=80
     - AWS_S3_FAKE_S3=s3:4569
     - MEDIA_URL=http://localhost:8003/builds.cloudpebble.net/
-    - QEMU_URLS=http://localhost:8001/
-    - YCM_URLS=http://localhost:8002/
+    - QEMU_URLS=http://qemu:80/
+    - YCM_URLS=http://ycmd:80/
     - PUBLIC_URL=http://localhost/
     - LIBPEBBLE_PROXY=wss://cloudpebble-ws.herokuapp.com/tool
     - PEBBLE_AUTH_URL=https://auth.rebble.io
