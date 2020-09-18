@@ -18,6 +18,11 @@ from utils.jsonview import json_view, InternalServerError
 
 logger = logging.getLogger(__name__)
 
+def fix_localhost(server):
+    import os
+    if os.environ.get('DOCKER_COMPOSE', 'no') == 'yes':
+        return server.replace('localhost', 'host.docker.internal')
+    return server
 
 @login_required
 @require_POST
@@ -41,7 +46,7 @@ def launch_emulator(request):
     if qemu_instance is not None:
         qemu_instance = json.loads(qemu_instance)
         try:
-            response = requests.post(qemu_instance['ping_url'], timeout=2)
+            response = requests.post(fix_localhost(qemu_instance['ping_url']), timeout=2)
             response.raise_for_status()
             response = response.json()
         except (requests.RequestException, ValueError) as e:
@@ -58,7 +63,7 @@ def launch_emulator(request):
         server = random.choice(list(servers))
         servers.remove(server)
         try:
-            result = requests.post(server + 'qemu/launch',
+            result = requests.post(fix_localhost(server) + 'qemu/launch',
                                    data={'token': token,
                                          'platform': platform,
                                          'version': version,

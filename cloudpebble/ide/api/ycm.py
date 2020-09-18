@@ -17,6 +17,11 @@ __author__ = 'katharine'
 
 logger = logging.getLogger(__name__)
 
+def fix_localhost(server):
+    import os
+    if os.environ.get('DOCKER_COMPOSE', 'no') == 'yes':
+        return server.replace('localhost', 'host.docker.internal')
+    return server
 
 @login_required
 @require_POST
@@ -55,7 +60,7 @@ def _spin_up_server(request):
         server = random.choice(list(servers))
         servers.remove(server)
         try:
-            result = requests.post('%sspinup' % server, json.dumps(request), headers={'Content-Type': 'application/json'})
+            result = requests.post('%sspinup' % fix_localhost(server), json.dumps(request), headers={'Content-Type': 'application/json'})
             if result.ok:
                 response = result.json()
                 if response['success']:

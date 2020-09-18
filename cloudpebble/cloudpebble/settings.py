@@ -56,6 +56,8 @@ else:
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../'
 
+BOWER_COMPONENTS_ROOT = PROJECT_PATH
+
 LANGUAGE_COOKIE_NAME = 'cloudpebble_language'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
