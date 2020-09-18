@@ -46,16 +46,17 @@ pushd /vagrant
 popd
 
 # We'll need this later
-wget --progress=bar:force -O arm-cs-tools.tar.bz2 http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk/arm-cs-tools-ubuntu-universal.tar.gz
+wget --progress=bar:force -O arm-cs-tools.tar.bz2 https://github.com/jwoglom/pebble-devtools-archive/raw/master/assets.getpebble.com/sdk/arm-cs-tools-macos-universal-static.tar.gz
 sudo -u vagrant tar -xzf arm-cs-tools.tar.bz2
 rm arm-cs-tools.tar.bz2
 
 # Obtain SDK2.
 sudo -u vagrant mkdir sdk2
 pushd sdk2
-    wget --progress=bar:force -O sdk.tar.gz https://sdk.getpebble.com/download/2.8.1?source=cloudpebble
-    sudo -u vagrant tar --strip 1 -xzf sdk.tar.gz
-    rm sdk.tar.gz
+    # replacing 2.8.1 with 2.9
+    wget --progress=bar:force -O sdk.tar.bz2 https://binaries.rebble.io/sdk-core/release/sdk-core-2.9.tar.bz2
+    sudo -u vagrant tar --strip 1 -xzf sdk.tar.bz2
+    rm sdk.tar.bz2
     sudo -u vagrant ln -s ~/arm-cs-tools arm-cs-tools
     pip install -r requirements.txt
 popd
@@ -63,7 +64,7 @@ popd
 # Obtain SDK3.
 sudo -u vagrant mkdir sdk3
 pushd sdk3
-    wget --progress=bar:force -O sdk.tar.gz https://s3.amazonaws.com/assets.getpebble.com/sdk3/release/sdk-core-3.8.1.tar.bz2
+    wget --progress=bar:force -O sdk.tar.gz https://binaries.rebble.io/sdk-core/release/sdk-core-3.8.1.tar.bz2
     sudo -u vagrant tar --strip 1 -xzf sdk.tar.gz
     rm sdk.tar.gz
     sudo -u vagrant ln -s ~/arm-cs-tools arm-cs-tools
