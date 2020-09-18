@@ -61,6 +61,9 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY . /code
 WORKDIR /code
 
+# fix RuntimeError: Error importing ycm_core. Full error: libtinfo.so.5: cannot open shared object file: No such file or directory
+RUN ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5 
+
 ENV PATH="$PATH:/arm-cs-tools/bin" YCMD_PEBBLE_SDK2=/sdk2/ YCMD_PEBBLE_SDK3=/sdk3/ \
   YCMD_STDLIB=/arm-cs-tools/arm-none-eabi/include/ \
   DEBUG=yes YCMD_PORT=80 YCMD_BINARY=/ycmd/ycmd/__main__.py \
