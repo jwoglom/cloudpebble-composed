@@ -26,10 +26,12 @@ logger = logging.getLogger(__name__)
 
 @task(acks_late=True)
 def do_import_github(project_id, github_user, github_project, github_branch, delete_project=False):
+    print("Running do_import_github:", project_id, github_user, github_project, github_branch, delete_project)
     try:
         url = "https://github.com/%s/%s/archive/%s.zip" % (github_user, github_project, github_branch)
         if file_exists(url):
             u = urllib2.urlopen(url)
+            print("Forwarding to do_import_archive")
             return do_import_archive(project_id, u.read())
         else:
             raise Exception("The branch '%s' does not exist." % github_branch)

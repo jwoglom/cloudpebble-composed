@@ -160,6 +160,7 @@ class Emulator(object):
         self.qemu.stdin.write("%s\n" % self.token[:8])
         self.group.spawn(self.qemu.communicate)
         self._wait_for_qemu()
+        print("QEMU spawned")
 
     def _wait_for_qemu(self):
         for i in range(20):

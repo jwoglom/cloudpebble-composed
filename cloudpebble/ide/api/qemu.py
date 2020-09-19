@@ -45,6 +45,8 @@ def launch_emulator(request):
     qemu_instance = redis_client.get(redis_key)
     if qemu_instance is not None:
         qemu_instance = json.loads(qemu_instance)
+        print("loaded qemu_instance:", qemu_instance)
+        print("will ping", fix_localhost(qemu_instance['ping_url']))
         try:
             response = requests.post(fix_localhost(qemu_instance['ping_url']), timeout=2)
             response.raise_for_status()
@@ -52,6 +54,7 @@ def launch_emulator(request):
         except (requests.RequestException, ValueError) as e:
             logger.info("couldn't fetch old instance: %s", e)
         else:
+            print("loaded instance:", response)
             if response.get('alive', False):
                 return qemu_instance
             else:
@@ -73,6 +76,7 @@ def launch_emulator(request):
                                    timeout=settings.QEMU_LAUNCH_TIMEOUT)
             result.raise_for_status()
             response = result.json()
+            print("got response from qemu:", response)
             url = urlparse.urlsplit(server)
             response['host'] = url.hostname
             response['secure'] = (url.scheme == 'https')
@@ -80,12 +84,14 @@ def launch_emulator(request):
             response['ping_url'] = '%sqemu/%s/ping' % (server, response['uuid'])
             response['kill_url'] = '%sqemu/%s/kill' % (server, response['uuid'])
             response['token'] = token
+            print("saving modified response:", response)
             redis_client.set(redis_key, json.dumps(response))
             return response
         except requests.HTTPError as e:
             logger.warning("Got HTTP error from QEMU launch. Content:\n%s", e.response.text)
         except (requests.RequestException, ValueError) as e:
             logger.error("Error launching qemu: %s", e)
+    print("tried all qemu servers: giving up")
     raise InternalServerError(_("Unable to create emulator instance."))
 
 

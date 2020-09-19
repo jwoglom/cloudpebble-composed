@@ -19,6 +19,7 @@ var EventedWebSocket = function(host) {
      */
     this.connect = function() {
         return new Promise(function(resolve, reject) {
+            console.info("EventedWebSocket opening for "+host);
             mSocket = new WebSocket(host);
             mSocket.onerror = function(e) {
                 self.trigger('error', e);

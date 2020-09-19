@@ -101,6 +101,7 @@ def proxy_ws(emu, attr, subprotocols=[]):
         abort(404)
         return  # unreachable but makes IDE happy.
     target_url = "ws://localhost:%d/" % getattr(emulator, attr)
+    print("proxy_ws: connecting to url", target_url)
     try:
         client_ws = websocket.create_connection(target_url, subprotocols=subprotocols, sslopt={
             'ssl_version': ssl.PROTOCOL_TLSv1,
@@ -110,6 +111,7 @@ def proxy_ws(emu, attr, subprotocols=[]):
     except:
         logging.exception("connection to %s failed.", target_url)
         return 'failed', 500
+    print("proxy_ws: connected, starting loops")
     alive = [True]
     def do_recv(receive, send):
         try:

@@ -146,6 +146,7 @@ def do_import_archive(project_id, archive, delete_project=False):
         with tempfile.NamedTemporaryFile(suffix='.zip') as archive_file:
             archive_file.write(archive)
             archive_file.flush()
+            print("Wrote NamedTemporaryFile:", archive_file)
             with zipfile.ZipFile(str(archive_file.name), 'r') as z:
                 contents = z.infolist()
                 # Requirements:
@@ -164,6 +165,7 @@ def do_import_archive(project_id, archive, delete_project=False):
                 INCLUDE_SRC_DIR = 'include/'
 
                 if len(contents) > 400:
+                    print("Too many files")
                     raise InvalidProjectArchiveException("Too many files in zip file.")
 
                 archive_items = [ArchiveProjectItem(z, x) for x in contents]
@@ -195,6 +197,7 @@ def do_import_archive(project_id, archive, delete_project=False):
                     else:
                         filtered_contents.append((filename, entry))
 
+                print("Beginning transaction...")
                 with transaction.atomic():
                     # We have a resource map! We can now try importing things from it.
                     project_options, media_map, dependencies = load_manifest_dict(manifest_dict, manifest_kind)
@@ -230,10 +233,13 @@ def do_import_archive(project_id, archive, delete_project=False):
                         desired_resources[root_file_name].append(resource)
                         file_exists_for_root[root_file_name] = False
 
+                    print("Going through contents")
                     # Go through the zip file process all resource and source files.
                     for filename, entry in filtered_contents:
+                        print("file:", filename)
                         if filename.startswith(RES_PATH):
                             base_filename = filename[len(RES_PATH) + 1:]
+                            print("Trying to open file:", base_dir, RES_PATH, base_filename)
                             # Let's just try opening the file
                             try:
                                 extracted = z.open("%s%s/%s" % (base_dir, RES_PATH, base_filename))
@@ -245,6 +251,7 @@ def do_import_archive(project_id, archive, delete_project=False):
                             tags, root_file_name = get_filename_variant(base_filename, tag_map)
                             tags_string = ",".join(str(int(t)) for t in tags)
 
+                            print("Desired resource?", root_file_name in desired_resources)
                             if root_file_name in desired_resources:
                                 medias = desired_resources[root_file_name]
 
@@ -267,16 +274,24 @@ def do_import_archive(project_id, archive, delete_project=False):
                                 resource_variants[actual_file_name].save_file(extracted)
                                 file_exists_for_root[root_file_name] = True
                         else:
+                            print("file doesn't start with RES_PATH", RES_PATH, "file:", filename)
                             try:
                                 base_filename, target = SourceFile.get_details_for_path(project.project_type, filename)
+                                print("base filename:", base_filename)
                             except ValueError:
                                 # We'll just ignore any out of place files.
                                 continue
                             source = SourceFile.objects.create(project=project, file_name=base_filename, target=target)
 
-                            with z.open(entry.filename) as f:
-                                source.save_text(f.read().decode('utf-8'))
+                            print("opening inside zip", entry.filename)
+                            fileopen = z.open(entry.filename)
+                            with fileopen as f:
+                                print("writing inside zip", entry.filename)
+                                source.save_text(fileopen.read().decode('utf-8'))
+                            fileopen.close()
+                            print("created sourcefile:", source)
 
+                    print("Adding resource identifiers")
                     # Now add all the resource identifiers
                     for root_file_name in desired_resources:
                         for resource in desired_resources[root_file_name]:
@@ -299,12 +314,17 @@ def do_import_archive(project_id, archive, delete_project=False):
                     for root_file_name, loaded in file_exists_for_root.iteritems():
                         if not loaded:
                             raise KeyError("No file was found to satisfy the manifest filename: {}".format(root_file_name))
+                    print("Going to save")
                     project.save()
+                    print("Going to send zip_import_succeeded event")
                     send_td_event('cloudpebble_zip_import_succeeded', project=project)
+                z.close()
 
+        print("returning true -- all ok?")
         # At this point we're supposed to have successfully created the project.
         return True
     except Exception as e:
+        print("Exception:", e)
         if delete_project:
             try:
                 Project.objects.get(pk=project_id).delete()
